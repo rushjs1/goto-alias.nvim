@@ -22,6 +22,7 @@ M.setup = function(opts)
 			if directory ~= "" then
 				M.nuxt_directory_path = string.sub(directory, 2)
 			end
+			break
 		end
 	end
 
