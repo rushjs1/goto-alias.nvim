@@ -1,19 +1,28 @@
 --TODO:
 --tests
 --does .nuxt directory detection using string.concat have better preformance?
---newly created components do not seem to workb
+--newly created components do not seem to work
 
 local M = {}
 
 M.is_nuxt_project = false
 M.original_definition = vim.lsp.buf.definition
+M.nuxt_directory_path = ""
 
-M.setup = function()
-	local dirList = vim.fn.systemlist("ls -a")
+local default_check_directories = { "" }
 
-	for _, dirname in ipairs(dirList) do
-		if dirname == ".nuxt" then
+M.setup = function(opts)
+	opts = opts or {}
+
+	local check_directories = vim.list_extend(default_check_directories, opts.check_directories or {})
+
+	for _, directory in ipairs(check_directories) do
+		if vim.fn.isdirectory(vim.loop.cwd() .. directory .. "/.nuxt") == 1 then
 			M.is_nuxt_project = true
+			if directory ~= "" then
+				M.nuxt_directory_path = string.sub(directory, 2)
+			end
+			break
 		end
 	end
 
@@ -38,7 +47,11 @@ M.watch = function()
 		local file = vim.fn.expand("%")
 
 		if string.find(file, "components.d.ts") then
-			vim.cmd("edit " .. path)
+			vim.api.nvim_buf_delete(0, { force = false })
+			vim.cmd("edit " .. M.nuxt_directory_path .. "/" .. path)
+		elseif string.find(line, "components.d.ts") then
+			vim.cmd("cclose")
+			vim.cmd("edit " .. M.nuxt_directory_path .. "/" .. path)
 		end
 	end, 100)
 end
