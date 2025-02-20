@@ -7,6 +7,7 @@ local M = {}
 
 M.is_nuxt_project = false
 M.original_definition = vim.lsp.buf.definition
+M.nuxt_directory_path = ""
 
 local default_check_directories = { "" }
 
@@ -15,9 +16,12 @@ M.setup = function(opts)
 
 	local check_directories = vim.list_extend(default_check_directories, opts.check_directories or {})
 
-	for _, dir in ipairs(check_directories) do
-		if vim.fn.isdirectory(vim.loop.cwd() .. dir .. "/.nuxt") == 1 then
+	for _, directory in ipairs(check_directories) do
+		if vim.fn.isdirectory(vim.loop.cwd() .. directory .. "/.nuxt") == 1 then
 			M.is_nuxt_project = true
+			if directory ~= "" then
+				M.nuxt_directory_path = string.sub(directory, 2)
+			end
 		end
 	end
 
@@ -43,10 +47,10 @@ M.watch = function()
 
 		if string.find(file, "components.d.ts") then
 			vim.api.nvim_buf_delete(0, { force = false })
-			vim.cmd("edit apps/web/" .. path)
+			vim.cmd("edit " .. M.nuxt_directory_path .. "/" .. path)
 		elseif string.find(line, "components.d.ts") then
 			vim.cmd("cclose")
-			vim.cmd("edit apps/web/" .. path)
+			vim.cmd("edit " .. M.nuxt_directory_path .. "/" .. path)
 		end
 	end, 100)
 end
